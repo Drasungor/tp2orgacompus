@@ -1,0 +1,10 @@
+#define MEMORY_SIZE 65536
+#define BLOCK_SIZE 128
+#define NUMBER_OF_SETS 8
+#define ASSOCIATIVITY 4
+
+#define INDEX_MASK 0x380
+
+#define TAG_SIZE 6
+#define INDEX_SIZE 3
+#define OFFSET_SIZE 7

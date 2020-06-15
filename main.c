@@ -1,49 +1,49 @@
 #include <string.h>
+#include "constants.h"
+//#define CACHE_SIZE 4096
 
-#define CACHE_SIZE 4096
-#define MEMORY_SIZE 65536
-
-
-typedef struct block {
-  char valid_bit;
-  char tag; //nos sobran 2 bits porque el tag es de 6 bits
-
-} block_t;
+typedef struct line {
+  bool is_valid; //Esto representa el valid bit
+  unsigned int tag; //nos sobran 2 bits porque el tag es de 6 bits
+  char block[BLOCK_SIZE];
+} line_t;
 
 typedef struct set {
-  unsigned int blocks[4]; //Block == Line
+  line_t lines[ASSOCIATIVITY];
 } set_t;
 
-
-char cache[CACHE_SIZE];
+set_t cache[NUMBER_OF_SETS];
 char memory[MEMORY_SIZE];
 unsigned int miss_rate;
-way_t ways[4];
 
 void init() {
-  memset(cache, 0, sizeof(char) * CACHE_SIZE);
+  memset(cache, 0, sizeof(set_t) * NUMBER_OF_SETS);
   memset(memory, 0, sizeof(char) * MEMORY_SIZE);
   miss_rate = 0;
 }
 
-unsiged int get_offset(unsigned int address)
-  return offset;
+unsiged int get_offset(unsigned int address) {
+
 }
 
 unsigned int find_set(unsigned int address) {
-  return set;
+
 }
 
 unsigned int select_oldest(unsigned int setnum) {
   return oldest;
 }
 
-int compare_tag (unsigned int tag, unsigned int set) {
-  return 1;
+int compare_tag(unsigned int tag, unsigned int set) {
+  for (int i = 0; i < ASSOCIATIVITY; i++) {
+    if (cache[set].lines[i].tag == tag) return i;
+  }
+  return -1;
 }
 
-void read_tocache(unsigned int blocknum, unsigned int way, unsigned int set) {
-
+void read_to_cache(unsigned int blocknum, unsigned int way, unsigned int set) {
+  char* block = memory[blocknum * BLOCK_SIZE];
+  memcpy(cache[set].lines[way].block, block, BLOCK_SIZE);
 }
 
 void write_to_cache(unsigned int address, unsigned char value) {
