@@ -9,3 +9,17 @@
 #define TAG_SIZE 6
 #define INDEX_SIZE 3
 #define OFFSET_SIZE 7
+
+#define FLUSH_COMMAND_TEXT "FLUSH"
+#define READ_COMMAND_TEXT "R"
+#define WRITE_COMMAND_TEXT "W"
+#define MISS_RATE_COMMAND_TEXT "MR"
+
+
+#define SUCCESS 0
+#define ERROR -1
+
+#define ARGUMENTS_FLUSH 2
+#define ARGUMENTS_MISS_RATE 2
+#define ARGUMENTS_READ 3
+#define ARGUMENTS_WRITE 4

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdbool.h>
+##include <string.h>
 #include "constants.h"
 //#define CACHE_SIZE 4096
 
@@ -18,6 +19,14 @@ set_t cache[NUMBER_OF_SETS];
 char memory[MEMORY_SIZE];
 unsigned int cache_accesses;
 unsigned int number_of_misses;
+
+
+bool _are_strings_equal(char* str1, char* str2) {
+  if (strlen(str1) != strlen(str2)) {
+    return false;
+  }
+  return !strcmp(str1, str2);
+}
 
 
 //Retorna el numero de bloque en memoria al que pertenece el address recibido
@@ -80,9 +89,7 @@ void read_to_cache(unsigned int blocknum, unsigned int way, unsigned int set) {
   memcpy(cache[set].lines[way].block, memory + address, BLOCK_SIZE);
 }
 
-void write_to_cache(unsigned int address, unsigned char value) {
 
-}
 
 void _increase_blocks_use_count(unsigned int set) {
   for (int i = 0; i < ASSOCIATIVITY; ++i) {
@@ -106,9 +113,7 @@ unsigned char read_byte(unsigned int address) {
   return cache[set].lines[way].block[offset];
 }
 
-void write_byte(unsigned int address, unsigned char value) {
-  memory[address] = value;//Escribo value en memoria
-
+void write_to_cache(unsigned int address, unsigned char value) {
   unsigned int set = find_set(address);
   unsigned int offset = get_offset(address);
   unsigned int tag = _get_tag(address);
@@ -121,11 +126,39 @@ void write_byte(unsigned int address, unsigned char value) {
   }
 }
 
+void write_byte(unsigned int address, unsigned char value) {
+  memory[address] = value;//Escribo value en memoria
+  write_to_cache(address, value);
+}
+
 float get_miss_rate() {
   return ((float)number_of_misses)/((float)cache_accesses);
 }
 
 
 int main(int argc, char const *argv[]) {
+  init();
+
+  FILE* file = fopen(argv[1], "r");
+
+  
+  switch (argc) {
+    case ARGUMENTS_FLUSH:
+      if (_are_strings_equal(argv[1], FLUSH_COMMAND_TEXT)) {
+        init();
+        return SUCCESS;
+      } else {
+        return ERROR;
+      }
+  }
+
+  if () {
+    if (_are_strings_equal(, )) {
+      /* code */
+    }
+  }
+
+  fclose(file);
+
   return 0;
 }
