@@ -88,6 +88,7 @@ int compare_tag(unsigned int tag, unsigned int set) {
 void read_to_cache(unsigned int blocknum, unsigned int way, unsigned int set) {
   unsigned int address = blocknum * BLOCK_SIZE;
   memcpy(cache[set].lines[way].block, memory + address, BLOCK_SIZE);
+  cache[set].lines[way].is_valid = true;
 }
 
 
@@ -133,6 +134,7 @@ void write_byte(unsigned int address, unsigned char value) {
 }
 
 float get_miss_rate() {
+  printf("Cantidad de misses: %d, Cantidad de accesos: %d\n", number_of_misses, cache_accesses);
   return ((float)number_of_misses)/((float)cache_accesses);
 }
 
