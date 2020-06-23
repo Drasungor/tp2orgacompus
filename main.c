@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdbool.h>
-##include <string.h>
+#include <string.h>
+#include <stdio.h>
 #include "constants.h"
 //#define CACHE_SIZE 4096
 
@@ -135,27 +136,92 @@ float get_miss_rate() {
   return ((float)number_of_misses)/((float)cache_accesses);
 }
 
+//Recibe el string a comparar con lo que queda de una linea del archivo
+bool _read_string(FILE* file, char* str2) {
+  char c = 0;
+  int i = 0;
+  int string_len = strlen(str2);
+  bool is_valid_command = true;
+  while (c != '\n') {
+    c = fgetc(file);
+    if (i < string_len) {
+      if (c != str2[i]) {
+        is_valid_command = false;
+      }
+    } else if (c != '\n') {
+      is_valid_command = false;
+    }
+    ++i;
+  }
+  return is_valid_command;
+}
+
+int _execute_flush(FILE* file) {
+  if (!_read_string(file, REST_OF_FLUSH_COMMAND_TEXT)) {
+    return ERROR;
+  }
+  init();
+  return SUCCESS;
+}
+
+int _execute_read(FILE* file) {
+  int address = 0;
+  int read_parameters = fscanf(file, " %d\n", &address);
+  if ((read_parameters != 1) || (address < 0) || (address >= MEMORY_SIZE)) {
+    return ERROR;
+  }
+  printf("Byte leido: %d\n", read_byte(address));
+  return SUCCESS;
+}
+
+int _execute_write(FILE* file) {
+  int address = 0, value = 0;
+  int read_parameters = fscanf(file, " %d, %d\n", &address, &value);
+  if (read_parameters !=  2){
+      return ERROR;
+  } else if ((address < 0) || (address > MEMORY_SIZE) || (value < 0) || (value > MAX_VALUE)) {
+    return ERROR;
+  }
+  write_byte(address, value);
+  return SUCCESS;
+}
+
+int _execute_miss_rate(FILE* file) {
+  if (!_read_string(file, REST_OF_MISS_RATE_COMMAND_TEXT)) {
+    return ERROR;
+  }
+  printf("Miss Rate: %f\n", get_miss_rate());
+  return SUCCESS;
+}
+
+int _execute_command(char command_indicator, FILE* file) {
+  switch (command_indicator) {
+    case 'W':
+      return _execute_write(file);
+    case 'R':
+      return _execute_read(file);
+    case 'F':
+      return _execute_flush(file);
+    case 'M':
+      return _execute_miss_rate(file);
+    default:
+      return ERROR;
+  }
+}
 
 int main(int argc, char const *argv[]) {
-  init();
-
+  if (argc != ARGUMENTS_EXECUTABLE) {
+    return ERROR;
+  }
   FILE* file = fopen(argv[1], "r");
 
-  
-  switch (argc) {
-    case ARGUMENTS_FLUSH:
-      if (_are_strings_equal(argv[1], FLUSH_COMMAND_TEXT)) {
-        init();
-        return SUCCESS;
-      } else {
-        return ERROR;
-      }
-  }
+  init();
 
-  if () {
-    if (_are_strings_equal(, )) {
-      /* code */
-    }
+  char command_indicator = 0;
+  int program_status = SUCCESS;
+  while ((!feof(file)) && (program_status == SUCCESS)) {
+    command_indicator = fgetc(file);
+    program_status = _execute_command(command_indicator, file);
   }
 
   fclose(file);
