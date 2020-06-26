@@ -89,6 +89,7 @@ void read_to_cache(unsigned int blocknum, unsigned int way, unsigned int set) {
   unsigned int address = blocknum * BLOCK_SIZE;
   memcpy(cache[set].lines[way].block, memory + address, BLOCK_SIZE);
   cache[set].lines[way].is_valid = true;
+  cache[set].lines[way].tag = _get_tag(address);
 }
 
 
