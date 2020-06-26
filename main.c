@@ -161,7 +161,7 @@ bool _read_string(FILE* file, char* str2) {
 
 int _execute_flush(FILE* file) {
   if (!_read_string(file, REST_OF_FLUSH_COMMAND_TEXT)) {
-    return ERROR;
+    return ERROR_INVALID_COMMAND;
   }
   init();
   return SUCCESS;
@@ -170,8 +170,10 @@ int _execute_flush(FILE* file) {
 int _execute_read(FILE* file) {
   int address = 0;
   int read_parameters = fscanf(file, " %d\n", &address);
-  if ((read_parameters != 1) || (address < 0) || (address >= MEMORY_SIZE)) {
-    return ERROR;
+  if ((read_parameters != 1) ) {
+    return ERROR_INVALID_PARAMETERS_AMOUNT;
+  } else if ((address < 0) || (address >= MEMORY_SIZE)) {
+    return ERROR_INVALID_ADDRESS;
   }
   printf("Byte leido: %d\n", read_byte(address));
   return SUCCESS;
@@ -181,9 +183,11 @@ int _execute_write(FILE* file) {
   int address = 0, value = 0;
   int read_parameters = fscanf(file, " %d, %d\n", &address, &value);
   if (read_parameters !=  2){
-      return ERROR;
-  } else if ((address < 0) || (address > MEMORY_SIZE) || (value < 0) || (value > MAX_VALUE)) {
-    return ERROR;
+      return ERROR_INVALID_PARAMETERS_AMOUNT;
+  } else if ((address < 0) || (address > MEMORY_SIZE)) {
+    return ERROR_INVALID_ADDRESS;
+  } else if ((value < 0) || (value > MAX_VALUE)) {
+    return ERROR_INVALID_VALUE;
   }
   write_byte(address, value);
   return SUCCESS;
@@ -191,7 +195,7 @@ int _execute_write(FILE* file) {
 
 int _execute_miss_rate(FILE* file) {
   if (!_read_string(file, REST_OF_MISS_RATE_COMMAND_TEXT)) {
-    return ERROR;
+    return ERROR_INVALID_COMMAND;
   }
   printf("Miss Rate: %f\n", get_miss_rate());
   return SUCCESS;
@@ -212,9 +216,32 @@ int _execute_command(char command_indicator, FILE* file) {
   }
 }
 
+void _show_error(int program_status){
+  switch (program_status) {
+    case ERROR_INVALID_ARGUMENTS_AMOUNT:
+      fprintf(stderr, "Cantidad inválida de argumentos\n");
+      break;
+    case ERROR_INVALID_PARAMETERS_AMOUNT:
+      fprintf(stderr, "Cantidad inválida de parametros\n");
+      break;
+    case ERROR_INVALID_COMMAND:
+      fprintf(stderr, "Comando inválido\n");
+      break;
+    case ERROR_INVALID_ADDRESS:
+      fprintf(stderr, "Direccion inválida\n");
+      break;
+    case ERROR_INVALID_VALUE:
+      fprintf(stderr, "Valor inválido\n");
+      break;
+    default:
+      fprintf(stderr, "Error desconocido\n");
+  }
+}
+
 int main(int argc, char const *argv[]) {
   if (argc != ARGUMENTS_EXECUTABLE) {
-    return ERROR;
+    _show_error(ERROR_INVALID_ARGUMENTS_AMOUNT);
+    return ERROR_INVALID_ARGUMENTS_AMOUNT;
   }
   FILE* file = fopen(argv[1], "r");
 
@@ -226,8 +253,11 @@ int main(int argc, char const *argv[]) {
     command_indicator = fgetc(file);
     program_status = _execute_command(command_indicator, file);
   }
+  if (program_status != SUCCESS) {
+    _show_error(program_status);
+  }
 
   fclose(file);
 
-  return 0;
+  return program_status;//Aca retornabamos siempre 0
 }
