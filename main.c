@@ -240,7 +240,7 @@ void _show_error(int program_status, int command_counter) {
       fprintf(stderr, "No existe el archivo en la direccion especificada");
       break;
     default:
-    fprintf(stderr, "Error desconocido ");
+    fprintf(stderr, "Comando inválido");
   }
   if (command_counter != -1) {
     fprintf(stderr, " en el comando %d\n", command_counter);
