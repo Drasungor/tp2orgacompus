@@ -237,7 +237,7 @@ void _show_error(int program_status, int command_counter) {
       fprintf(stderr, "Valor inválido");
       break;
     case ERROR_NON_EXISTENT_FILE:
-      fprintf(stderr, "No existe el archivo en la direccion especificada");
+      fprintf(stderr, "No existe el archivo en la direccion especificada, error");
       break;
     default:
     fprintf(stderr, "Comando inválido");
