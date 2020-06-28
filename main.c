@@ -222,22 +222,22 @@ int _execute_command(char command_indicator, FILE* file) {
 void _show_error(int program_status, int command_counter) {
   switch (program_status) {
     case ERROR_INVALID_ARGUMENTS_AMOUNT:
-      fprintf(stderr, "Cantidad inválida de argumentos ");
+      fprintf(stderr, "Cantidad inválida de argumentos");
       break;
     case ERROR_INVALID_PARAMETERS:
-      fprintf(stderr, "Parametros inválidos ");
+      fprintf(stderr, "Parametros inválidos");
       break;
     case ERROR_INVALID_COMMAND:
-      fprintf(stderr, "Comando inválido ");
+      fprintf(stderr, "Comando inválido");
       break;
     case ERROR_INVALID_ADDRESS:
-      fprintf(stderr, "Direccion inválida ");
+      fprintf(stderr, "Direccion inválida");
       break;
     case ERROR_INVALID_VALUE:
-      fprintf(stderr, "Valor inválido ");
+      fprintf(stderr, "Valor inválido");
       break;
     case ERROR_NON_EXISTENT_FILE:
-      fprintf(stderr, "No existe el archivo en la direccion especificada ");
+      fprintf(stderr, "No existe el archivo en la direccion especificada");
       break;
     default:
     fprintf(stderr, "Error desconocido ");
