@@ -9,7 +9,7 @@ typedef struct line {
   bool is_valid; //Esto representa el valid bit
   unsigned int tag; //nos sobran 2 bits porque el tag es de 6 bits
   char block[BLOCK_SIZE];
-  unsigned int times_used;
+  unsigned int lru_index;
 } line_t;
 
 typedef struct set {
@@ -71,7 +71,7 @@ unsigned int find_set(unsigned int address) {
 unsigned int select_oldest(unsigned int setnum) {
   unsigned int oldest_index = 0;
   for (size_t i = 0; i < ASSOCIATIVITY; ++i) {
-    if (cache[setnum].lines[i].times_used > cache[setnum].lines[oldest_index].times_used) {
+    if (cache[setnum].lines[i].lru_index > cache[setnum].lines[oldest_index].lru_index) {
       oldest_index = i;
     }
   }
@@ -96,7 +96,7 @@ void read_to_cache(unsigned int blocknum, unsigned int way, unsigned int set) {
 
 void _increase_blocks_use_count(unsigned int set) {
   for (int i = 0; i < ASSOCIATIVITY; ++i) {
-    ++cache[set].lines[i].times_used;
+    ++cache[set].lines[i].lru_index;
   }
 }
 
@@ -111,7 +111,7 @@ unsigned char read_byte(unsigned int address) {
     ++number_of_misses;
   }
   _increase_blocks_use_count(set);
-  cache[set].lines[way].times_used = 0;
+  cache[set].lines[way].lru_index = 0;
   ++cache_accesses;
   return cache[set].lines[way].block[offset];
 }
@@ -123,7 +123,7 @@ void write_to_cache(unsigned int address, unsigned char value) {
   int way = compare_tag(tag, set);
   if (way != -1) {
     _increase_blocks_use_count(set);
-    cache[set].lines[way].times_used = 0;
+    cache[set].lines[way].lru_index = 0;
     cache[set].lines[way].block[offset] = value;
     ++cache_accesses;
   }
@@ -168,9 +168,11 @@ int _execute_flush(FILE* file) {
 
 int _execute_read(FILE* file) {
   int address = 0;
-  int read_parameters = fscanf(file, " %d\n", &address);
+  int read_parameters = fscanf(file, " %d", &address);
   if ((read_parameters != ARGUMENTS_READ) ) {
-    return ERROR_INVALID_PARAMETERS_AMOUNT;
+    return ERROR_INVALID_PARAMETERS;
+  } else if (fgetc(file) != '\n') {
+    return ERROR_INVALID_PARAMETERS;
   } else if ((address < 0) || (address >= MEMORY_SIZE)) {
     return ERROR_INVALID_ADDRESS;
   }
@@ -180,9 +182,11 @@ int _execute_read(FILE* file) {
 
 int _execute_write(FILE* file) {
   int address = 0, value = 0;
-  int read_parameters = fscanf(file, " %d, %d\n", &address, &value);
-  if (read_parameters !=  ARGUMENTS_WRITE){
-      return ERROR_INVALID_PARAMETERS_AMOUNT;
+  int read_parameters = fscanf(file, " %d, %d", &address, &value);
+  if (read_parameters !=  ARGUMENTS_WRITE) {
+    return ERROR_INVALID_PARAMETERS;
+  } else if (fgetc(file) != '\n') {
+    return ERROR_INVALID_PARAMETERS;
   } else if ((address < 0) || (address >= MEMORY_SIZE)) {
     return ERROR_INVALID_ADDRESS;
   } else if ((value < 0) || (value > MAX_VALUE)) {
@@ -215,54 +219,61 @@ int _execute_command(char command_indicator, FILE* file) {
   }
 }
 
-void _show_error(int program_status) {
+void _show_error(int program_status, int command_counter) {
   switch (program_status) {
     case ERROR_INVALID_ARGUMENTS_AMOUNT:
-      fprintf(stderr, "Cantidad inválida de argumentos\n");
+      fprintf(stderr, "Cantidad inválida de argumentos ");
       break;
-    case ERROR_INVALID_PARAMETERS_AMOUNT:
-      fprintf(stderr, "Cantidad inválida de parametros\n");
+    case ERROR_INVALID_PARAMETERS:
+      fprintf(stderr, "Parametros inválidos ");
       break;
     case ERROR_INVALID_COMMAND:
-      fprintf(stderr, "Comando inválido\n");
+      fprintf(stderr, "Comando inválido ");
       break;
     case ERROR_INVALID_ADDRESS:
-      fprintf(stderr, "Direccion inválida\n");
+      fprintf(stderr, "Direccion inválida ");
       break;
     case ERROR_INVALID_VALUE:
-      fprintf(stderr, "Valor inválido\n");
+      fprintf(stderr, "Valor inválido ");
       break;
     case ERROR_NON_EXISTENT_FILE:
-      fprintf(stderr, "No existe el archivo en la direccion especificada\n");
+      fprintf(stderr, "No existe el archivo en la direccion especificada ");
       break;
     default:
-      fprintf(stderr, "Error desconocido\n");
+    fprintf(stderr, "Error desconocido ");
+  }
+  if (command_counter != -1) {
+    fprintf(stderr, " en el comando %d\n", command_counter);
+  } else {
+    fprintf(stderr, " en los argumentos del ejecutable del programa\n");
   }
 }
 
 int main(int argc, char const *argv[]) {
   if (argc != ARGUMENTS_EXECUTABLE) {
-    _show_error(ERROR_INVALID_ARGUMENTS_AMOUNT);
+    _show_error(ERROR_INVALID_ARGUMENTS_AMOUNT, -1);
     return ERROR_INVALID_ARGUMENTS_AMOUNT;
   }
   FILE* file = fopen(argv[1], "r");
 
   if (!file) {
-    _show_error(ERROR_NON_EXISTENT_FILE);
+    _show_error(ERROR_NON_EXISTENT_FILE, -1);
     return ERROR_NON_EXISTENT_FILE;
   }
 
   init();
 
+  int command_counter = 0;
   char command_indicator = 0;
   int program_status = SUCCESS;
   command_indicator = fgetc(file);
   while ((!feof(file)) && (program_status == SUCCESS)) {
     program_status = _execute_command(command_indicator, file);
     command_indicator = fgetc(file);
+    ++command_counter;
   }
   if (program_status != SUCCESS) {
-    _show_error(program_status);
+    _show_error(program_status, command_counter);
   }
 
   fclose(file);
