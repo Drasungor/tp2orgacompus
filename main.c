@@ -216,7 +216,7 @@ int _execute_command(char command_indicator, FILE* file) {
   }
 }
 
-void _show_error(int program_status){
+void _show_error(int program_status) {
   switch (program_status) {
     case ERROR_INVALID_ARGUMENTS_AMOUNT:
       fprintf(stderr, "Cantidad inválida de argumentos\n");
@@ -249,9 +249,10 @@ int main(int argc, char const *argv[]) {
 
   char command_indicator = 0;
   int program_status = SUCCESS;
+  command_indicator = fgetc(file);
   while ((!feof(file)) && (program_status == SUCCESS)) {
-    command_indicator = fgetc(file);
     program_status = _execute_command(command_indicator, file);
+    command_indicator = fgetc(file);
   }
   if (program_status != SUCCESS) {
     _show_error(program_status);
