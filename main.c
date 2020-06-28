@@ -135,7 +135,6 @@ void write_byte(unsigned int address, unsigned char value) {
 }
 
 float get_miss_rate() {
-  printf("Cantidad de misses: %d, Cantidad de accesos: %d\n", number_of_misses, cache_accesses);
   return ((float)number_of_misses)/((float)cache_accesses);
 }
 
@@ -170,7 +169,7 @@ int _execute_flush(FILE* file) {
 int _execute_read(FILE* file) {
   int address = 0;
   int read_parameters = fscanf(file, " %d\n", &address);
-  if ((read_parameters != 1) ) {
+  if ((read_parameters != ARGUMENTS_READ) ) {
     return ERROR_INVALID_PARAMETERS_AMOUNT;
   } else if ((address < 0) || (address >= MEMORY_SIZE)) {
     return ERROR_INVALID_ADDRESS;
@@ -182,9 +181,9 @@ int _execute_read(FILE* file) {
 int _execute_write(FILE* file) {
   int address = 0, value = 0;
   int read_parameters = fscanf(file, " %d, %d\n", &address, &value);
-  if (read_parameters !=  2){
+  if (read_parameters !=  ARGUMENTS_WRITE){
       return ERROR_INVALID_PARAMETERS_AMOUNT;
-  } else if ((address < 0) || (address > MEMORY_SIZE)) {
+  } else if ((address < 0) || (address >= MEMORY_SIZE)) {
     return ERROR_INVALID_ADDRESS;
   } else if ((value < 0) || (value > MAX_VALUE)) {
     return ERROR_INVALID_VALUE;
@@ -203,13 +202,13 @@ int _execute_miss_rate(FILE* file) {
 
 int _execute_command(char command_indicator, FILE* file) {
   switch (command_indicator) {
-    case 'W':
+    case WRITE_INDICATOR:
       return _execute_write(file);
-    case 'R':
+    case READ_INDICATOR:
       return _execute_read(file);
-    case 'F':
+    case FLUSH_INDICATOR:
       return _execute_flush(file);
-    case 'M':
+    case MISS_RATE_INDICATOR:
       return _execute_miss_rate(file);
     default:
       return ERROR;
@@ -233,6 +232,9 @@ void _show_error(int program_status) {
     case ERROR_INVALID_VALUE:
       fprintf(stderr, "Valor inválido\n");
       break;
+    case ERROR_NON_EXISTENT_FILE:
+      fprintf(stderr, "No existe el archivo en la direccion especificada\n");
+      break;
     default:
       fprintf(stderr, "Error desconocido\n");
   }
@@ -244,6 +246,11 @@ int main(int argc, char const *argv[]) {
     return ERROR_INVALID_ARGUMENTS_AMOUNT;
   }
   FILE* file = fopen(argv[1], "r");
+
+  if (!file) {
+    _show_error(ERROR_NON_EXISTENT_FILE);
+    return ERROR_NON_EXISTENT_FILE;
+  }
 
   init();
 
